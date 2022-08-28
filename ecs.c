@@ -41,7 +41,7 @@ typedef struct {
     /* Marks the state of a certain entity, for example if is dead or alive */
     uint32_t* flag_array;
 
-    /* Cuantity of allocated entities */
+    /* Cuantity of allocated entities (used) they may be dead */
     uint32_t count;
 
     /* Cuantity of allocated space for entities */
@@ -167,12 +167,16 @@ ecs_create()
 void*
 ecs_get(uint32_t entity_id, uint32_t component_id)
 {
+    /* Check that the entity_id corresponds to an entity */
+    if entity_id >= state.entity_store.count &&
+            state.entity_store.flag_array[entity_id] != ENTITY_FLAG_ALIVE {
+        return NULL;
+    }
+
     /* Knowing the entity_id indicates the index on the data of component 
      * bundles and that the exact offset for a certain component in a bundle
      * can be obtained through `component_store.data_offset_array` we get
-     * the address of that component.
-     *
-     * TODO: Add more checks */
+     * the address of that component */
     return (uint8_t*)state.component_store.data + 
                 (entity_id * state.component_store.size + 
                  state.component_store.data_offset_array[component_id]);
